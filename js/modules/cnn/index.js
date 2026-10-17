@@ -1,33 +1,13 @@
 // Module 2 — Image classification with a small CNN on synthetic handwritten digits.
-import { h, drawGray, probBars } from '../../ui/dom.js';
+import { h, probBars } from '../../ui/dom.js';
+import { drawPad, imgCell } from '../../ui/pad.js';
+import { useCases, USE_TEXT } from './uses.js';
 import { heatmap } from '../../ui/chart.js';
 import { confusionMatrix } from '../../core/metrics.js';
-import { DIGIT_SIZE as S, frameDrawing } from '../../shared/digits.js';
+import { frameDrawing } from '../../shared/digits.js';
 import { makeData, createSession, architecture } from './model.js';
 
 const DIGITS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-
-export function imgCell(pixels, caption, { wrong = false, size = S } = {}) {
-  return h('div', { class: `img-cell${wrong ? ' wrong' : ''}` }, drawGray(h('canvas'), pixels, size), caption);
-}
-
-// A mouse/touch drawing pad. onChange(imageData) fires after each stroke.
-export function drawPad(onChange, { size = 168, brush = 13 } = {}) {
-  const canvas = h('canvas', { width: size, height: size, style: { width: `${size}px`, height: `${size}px`, background: '#000', borderRadius: '10px', touchAction: 'none', cursor: 'crosshair' } });
-  const ctx = canvas.getContext('2d');
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  ctx.strokeStyle = '#fff';
-  ctx.lineWidth = brush;
-  let drawing = false;
-  const pos = (e) => { const r = canvas.getBoundingClientRect(); return [(e.clientX - r.left) * (size / r.width), (e.clientY - r.top) * (size / r.height)]; };
-  canvas.addEventListener('pointerdown', (e) => { drawing = true; canvas.setPointerCapture(e.pointerId); const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 0.1, y); ctx.stroke(); });
-  canvas.addEventListener('pointermove', (e) => { if (!drawing) return; const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); });
-  const end = () => { if (!drawing) return; drawing = false; onChange(ctx.getImageData(0, 0, size, size)); };
-  canvas.addEventListener('pointerup', end);
-  canvas.addEventListener('pointerleave', end);
-  return { canvas, clear() { ctx.clearRect(0, 0, size, size); } };
-}
 
 export default {
   id: 'cnn',
@@ -66,6 +46,7 @@ export default {
   architecture,
   makeData,
   createSession,
+  useCases,
 
   renderData(el, data, ctx) {
     const byClass = DIGITS.map((_, d) => data.train.x.filter((__, i) => data.train.y[i] === d).slice(0, 3));
@@ -150,6 +131,7 @@ export default {
 
   text: {
     ko: {
+      ...USE_TEXT.ko,
       'c.filters': '첫 합성곱층 필터 수',
       'c.dense': 'Dense 층 뉴런 수',
       'c.dropout': '드롭아웃',
@@ -175,6 +157,7 @@ export default {
       'm.mistakesHelp': '테스트 이미지 {total}장 중 {n}장을 틀렸습니다. "정답→예측" 형식으로 표시합니다.',
     },
     en: {
+      ...USE_TEXT.en,
       'c.filters': 'Filters in first conv layer',
       'c.dense': 'Dense layer neurons',
       'c.dropout': 'Dropout',

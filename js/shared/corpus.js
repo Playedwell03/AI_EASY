@@ -17,6 +17,9 @@ const EN = {
   pair: [['eats', 'an apple'], ['drinks', 'some milk'], ['reads', 'a book'], ['throws', 'a ball'], ['sees', 'a flower'], ['bakes', 'some bread'], ['sings', 'a song']],
 };
 
+// Default prompts for generation, per corpus language.
+export const PROMPTS = { ko: '고양이는 ', en: 'the cat ' };
+
 const pick = (arr, rand) => arr[Math.floor(rand() * arr.length)];
 
 export function makeSentence(lang, rand) {

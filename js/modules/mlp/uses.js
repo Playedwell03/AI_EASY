@@ -37,7 +37,7 @@ const spam = {
   realWorld: lt('수백 가지 특징(보낸 사람, 단어, 첨부 파일…)과 수백만 통의 진짜 메일로 학습합니다. 여기서는 내 모델이 배운 경계 모양을 그대로 "스팸 구역"으로 씁니다.', 'Hundreds of features (sender, words, attachments…) learned from millions of real mails. Here, the shape your model learned is used directly as the "spam zone".'),
   pipeline: [
     step('input', '새 메일 도착', 'New mail arrives', '메일 한 통이 들어옵니다.', 'A mail comes in.'),
-    step('pre', '특징 세기', 'Count features', '링크 수(0~20)와 느낌표 수(0~20)를 세고, 모델이 받는 -1~1 범위로 바꿉니다.', 'Counts links (0–20) and exclamation marks (0–20) and rescales them to the model\'s −1…1 range.'),
+    step('pre', '특징 세기', 'Count features', '링크 수(0~20)와 느낌표 수(0~20)를 세고 모델 입력 평면에 놓습니다. 0개는 평면의 한가운데, 20개는 가장자리입니다.', 'Counts links (0–20) and exclamation marks (0–20) and places them on the model\'s input plane: 0 at the centre, 20 at the edge.'),
     step('model', '스팸 확률 계산', 'Spam probability', '학습한 MLP가 두 숫자를 보고 "주황 클래스(=스팸)일 확률"을 냅니다.', 'Your trained MLP turns the two numbers into the probability of the orange class (= spam).'),
     step('post', '50% 기준 판단', 'Decide at 50%', '확률이 50% 이상이면 스팸함으로 보냅니다.', 'At 50% or more, it goes to the spam folder.'),
     step('output', '받은편지함 / 스팸함', 'Inbox / Spam', '분류된 결과가 메일함에 표시됩니다.', 'The mail shows up in the chosen folder.'),
@@ -51,14 +51,14 @@ const spam = {
     const map = decisionMap(ctx);
     const verdict = h('div', { class: 'big-result' });
     const list = h('div', { class: 'stack', style: { gap: '6px' } });
-    const judge = (l, b) => prob(ctx, toPlane(l, 0, 20), toPlane(b, 0, 20));
+    const judge = (l, b) => prob(ctx, toPlane(l, -20, 20), toPlane(b, -20, 20));
     const draw = () => {
       flow.run();
       const p = judge(links, bangs);
       verdict.replaceChildren(p >= 0.5 ? h('span', { class: 'tag-bad' }, `🚫 ${ctx.t('use.mlp.toSpam')} · ${pct(p)}`) : h('span', { class: 'tag-good' }, `📥 ${ctx.t('use.mlp.toInbox')} · ${pct(p)}`));
       map.chart.update({
-        points: mails.map((m) => ({ x: toPlane(m.links, 0, 20), y: toPlane(m.bangs, 0, 20), c: judge(m.links, m.bangs) >= 0.5 ? 1 : 0, r: 4 })),
-        marker: { x: toPlane(links, 0, 20), y: toPlane(bangs, 0, 20) },
+        points: mails.map((m) => ({ x: toPlane(m.links, -20, 20), y: toPlane(m.bangs, -20, 20), c: judge(m.links, m.bangs) >= 0.5 ? 1 : 0, r: 4 })),
+        marker: { x: toPlane(links, -20, 20), y: toPlane(bangs, -20, 20) },
       });
     };
     list.append(...mails.map((m) => {
@@ -85,7 +85,7 @@ const factory = {
   realWorld: lt('실제 공장은 수십 개 센서와 카메라를 함께 쓰고, 불량을 놓치는 비용과 멀쩡한 제품을 버리는 비용을 따져 기준선을 정합니다.', 'Real lines combine dozens of sensors and cameras, and set the threshold by weighing the cost of a missed defect against discarding good products.'),
   pipeline: [
     step('input', '센서 측정', 'Sensors', '제품이 지나가면 온도(20~80℃)와 진동(0~10)을 잽니다.', 'As a product passes, temperature (20–80°C) and vibration (0–10) are measured.'),
-    step('pre', '범위 맞추기', 'Rescale', '두 값을 모델 입력 범위(-1~1)로 바꿉니다.', 'Both values are rescaled to the model\'s −1…1 input range.'),
+    step('pre', '범위 맞추기', 'Rescale', '평범한 값(50℃, 진동 0)이 평면 한가운데에 오도록 두 값을 옮깁니다. 극단적인 값일수록 가장자리로 갑니다.', 'Both values are shifted so ordinary readings (50°C, no vibration) sit at the centre of the plane; extreme readings move to the edge.'),
     step('model', '불량 확률', 'Defect probability', '학습한 MLP가 "주황(=불량)"일 확률을 계산합니다.', 'Your MLP computes the probability of orange (= defective).'),
     step('post', '기준선 비교', 'Threshold', '확률이 기준선을 넘으면 불량으로 분류합니다. 기준선을 바꿔 보세요.', 'Above the threshold, it is classified as defective. Try moving the threshold.'),
     step('output', '통과 / 제거', 'Pass / Reject', '정상품은 포장으로, 불량품은 제거 라인으로 갑니다.', 'Good products go to packing, defective ones to the reject line.'),
@@ -102,7 +102,7 @@ const factory = {
       for (let i = 0; i < count; i++) {
         const temp = 20 + rand() * 60;
         const vib = rand() * 10;
-        const p = prob(ctx, toPlane(temp, 20, 80), toPlane(vib, 0, 10));
+        const p = prob(ctx, toPlane(temp, 20, 80), toPlane(vib, -10, 10));
         history.push({ temp, vib, p });
       }
       flow.run();

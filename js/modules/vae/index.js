@@ -2,8 +2,9 @@
 import { h, fmt, drawGray } from '../../ui/dom.js';
 import { scatter } from '../../ui/chart.js';
 import { DIGIT_SIZE as S } from '../../shared/digits.js';
-import { imgCell } from '../cnn/index.js';
+import { imgCell } from '../../ui/pad.js';
 import { makeData, createSession, architecture, meanImageLoss } from './model.js';
+import { useCases, USE_TEXT } from './uses.js';
 
 // Ten categorical colors readable on light and dark backgrounds (one per digit).
 export const DIGIT_COLORS = ['#4c6ef5', '#f76707', '#37b24d', '#e64980', '#7950f2', '#15aabf', '#f59f00', '#868e96', '#d6336c', '#82c91e'];
@@ -61,6 +62,7 @@ export default {
   architecture,
   makeData,
   createSession,
+  useCases,
 
   renderData(el, data, ctx) {
     el.append(
@@ -139,6 +141,7 @@ export default {
 
   text: {
     ko: {
+      ...USE_TEXT.ko,
       'c.variational': 'VAE 모드 (끄면 일반 오토인코더)',
       'c.hidden': '은닉층 뉴런 수',
       'c.beta': 'β (KL 항의 무게)',
@@ -167,6 +170,7 @@ export default {
       'm.gridHelpAe': '잠재공간을 8×8 격자로 나눠 각 위치를 디코딩했습니다. 일반 오토인코더는 빈틈이 있어서 어떤 위치에서는 알아보기 힘든 그림이 나옵니다. VAE 모드와 비교해 보세요.',
     },
     en: {
+      ...USE_TEXT.en,
       'c.variational': 'VAE mode (off = plain autoencoder)',
       'c.hidden': 'Hidden layer neurons',
       'c.beta': 'β (weight of the KL term)',

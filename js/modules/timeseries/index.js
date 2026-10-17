@@ -4,6 +4,7 @@ import { lineChart, chartBox } from '../../ui/chart.js';
 import { mulberry32 } from '../../core/rng.js';
 import { makeData, makeSeries, windows, naiveErrors } from './data.js';
 import { createSession, architecture } from './model.js';
+import { useCases, USE_TEXT } from './uses.js';
 
 // Values at the given indices, NaN elsewhere (so a line only covers that part of the axis).
 const only = (series, from, to) => series.map((v, i) => (i >= from && i < to ? v : NaN));
@@ -47,6 +48,7 @@ export default {
   architecture,
   makeData,
   createSession,
+  useCases,
 
   renderData(el, data, ctx) {
     const box = chartBox();
@@ -160,6 +162,7 @@ export default {
 
   text: {
     ko: {
+      ...USE_TEXT.ko,
       'c.arch': '모델 종류',
       'c.units': '유닛(필터) 수',
       'c.window': '창 크기 (몇 개를 보고 예측할지)',
@@ -191,6 +194,7 @@ export default {
       'm.freshStats': '모델 MAE {m} · 나이브 MAE {n}',
     },
     en: {
+      ...USE_TEXT.en,
       'c.arch': 'Model type',
       'c.units': 'Units (filters)',
       'c.window': 'Window size (how many past values it sees)',

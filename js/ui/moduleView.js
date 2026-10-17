@@ -195,6 +195,7 @@ function ctxFor(m) {
     hp: m.hp, data: m.data, runner: m.runner, def: m.def,
     get session() { return m.runner.session; },
     t: (key, vars) => tx(m.def, key, vars),
+    L,
     onCleanup(fn) { const prev = m.cleanup; m.cleanup = () => { prev?.(); fn(); }; },
   };
 }

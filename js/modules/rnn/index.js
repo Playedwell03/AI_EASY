@@ -2,8 +2,10 @@
 import { h, fmt, probBars } from '../../ui/dom.js';
 import { mulberry32 } from '../../core/rng.js';
 import { makeData, createSession, architecture } from './model.js';
+import { PROMPTS } from '../../shared/corpus.js';
+import { useCases, USE_TEXT } from './uses.js';
 
-export const PROMPTS = { ko: '고양이는 ', en: 'the cat ' };
+export { PROMPTS };
 const show = (c) => (c === ' ' ? '␣' : c);
 
 // Pieces shared with the Transformer and BERT modules.
@@ -175,10 +177,12 @@ export default {
   renderTrainViz: genLogViz,
   diagnosePanel: lmDiagnose,
   renderTest: lmTest,
+  useCases,
 
   text: {
     ko: {
       ...LM_TEXT.ko,
+      ...USE_TEXT.ko,
       'c.cell': '순환 셀 종류',
       'c.units': '은닉 상태 크기',
       'c.seqLen': '한 번에 보는 글자 수',
@@ -188,6 +192,7 @@ export default {
     },
     en: {
       ...LM_TEXT.en,
+      ...USE_TEXT.en,
       'c.cell': 'Recurrent cell',
       'c.units': 'Hidden state size',
       'c.seqLen': 'Characters seen at once',
