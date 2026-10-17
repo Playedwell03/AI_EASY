@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { tf, trainModule } from './helpers.js';
+import { tf, trainModule, slow } from './helpers.js';
 import { mulberry32 } from '../js/core/rng.js';
 import { makePoints } from '../js/modules/mlp/data.js';
 import mlp from '../js/modules/mlp/index.js';
@@ -24,7 +24,7 @@ test('makeData splits into train/val/test with counts', () => {
   assert.equal(d.train.x.length, train);
 });
 
-test('default MLP learns the circle well', async () => {
+test('default MLP learns the circle well', slow, async () => {
   const r = await trainModule(mlp);
   const res = await r.session.evaluateTest();
   r.session.dispose();
@@ -34,7 +34,7 @@ test('default MLP learns the circle well', async () => {
 });
 
 for (const p of mlp.breakPresets) {
-  test(`preset "${p.id}" is diagnosed as ${p.expect}`, async () => {
+  test(`preset "${p.id}" is diagnosed as ${p.expect}`, slow, async () => {
     const before = tf.memory().numTensors;
     const r = await trainModule(mlp, p.hp);
     r.session.dispose();

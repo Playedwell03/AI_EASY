@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test --test-concurrency=1",
+    "test:slow": "SLOW=1 node --test --test-concurrency=1",
     "serve": "python3 -m http.server 8000"
   },
   "devDependencies": {

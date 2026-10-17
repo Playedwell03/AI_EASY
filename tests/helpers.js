@@ -5,6 +5,9 @@ import { diagnoseCurves } from '../js/core/diagnose.js';
 await tf.setBackend('cpu');
 export { tf };
 
+// Training-quality tests take minutes; run them with SLOW=1 (npm run test:slow).
+export const slow = { skip: process.env.SLOW === '1' ? false : 'training test — run with SLOW=1' };
+
 // Node's 'cpu' backend is the same engine a browser without WebGL uses, so tests run the
 // module's cpuDefaults — exactly what such a browser would run.
 export async function trainModule(def, overrides = {}) {

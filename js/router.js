@@ -1,6 +1,6 @@
 // Hash routes: #/ → home, #/m/<id>/<tab> → a module tab (tab defaults to "arch").
 
-export const TABS = ['arch', 'data', 'train', 'diagnose', 'test'];
+export const TABS = ['arch', 'data', 'train', 'diagnose', 'test', 'use'];
 
 export function parseRoute(hash) {
   const parts = (hash || '').replace(/^#\/?/, '').split('/').filter(Boolean);

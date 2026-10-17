@@ -6,6 +6,7 @@ import { createRunner } from '../core/runner.js';
 import { diagnoseCurves } from '../core/diagnose.js';
 import { lineChart, chartBox } from './chart.js';
 import { renderArch } from './archView.js';
+import { renderUseTab } from './useView.js';
 
 let mounted = null; // { def, hp, data, runner, tab, el, offLang, activePreset, testCache, archSel }
 
@@ -101,7 +102,7 @@ function render() {
         h('span', { class: 'n' }, String(i + 1)), t(`tab.${id}`)))),
     body,
     nextStep(def, tab) || '');
-  ({ arch: renderArchTab, data: renderDataTab, train: renderTrainTab, diagnose: renderDiagnoseTab, test: renderTestTab })[tab](body, m);
+  ({ arch: renderArchTab, data: renderDataTab, train: renderTrainTab, diagnose: renderDiagnoseTab, test: renderTestTab, use: renderUse })[tab](body, m);
 }
 
 function nextStep(def, tab) {
@@ -333,6 +334,12 @@ function renderDiagnoseTab(body, m) {
       }
     });
   }
+}
+
+/* ---------- 6. Use ---------- */
+function renderUse(body, m) {
+  const off = renderUseTab(body, m, ctxFor(m));
+  if (off) { const prev = m.cleanup; m.cleanup = () => { prev?.(); off(); }; }
 }
 
 /* ---------- 5. Test ---------- */

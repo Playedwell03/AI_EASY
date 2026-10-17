@@ -3,6 +3,7 @@ import { h, pct } from '../../ui/dom.js';
 import { scatter } from '../../ui/chart.js';
 import { makeData } from './data.js';
 import { createSession, architecture } from './model.js';
+import { useCases, USE_TEXT } from './uses.js';
 
 const GRID = 41;
 
@@ -62,6 +63,7 @@ export default {
   architecture,
   makeData,
   createSession,
+  useCases,
 
   renderData(el, data, ctx) {
     const p = plane();
@@ -117,6 +119,7 @@ export default {
 
   text: {
     ko: {
+      ...USE_TEXT.ko,
       'c.layers': '은닉층 수',
       'c.units': '층마다 뉴런 수',
       'c.activation': '활성화 함수',
@@ -143,6 +146,7 @@ export default {
       'm.clickResult': '주황 {p1} · 파랑 {p0}',
     },
     en: {
+      ...USE_TEXT.en,
       'c.layers': 'Hidden layers',
       'c.units': 'Neurons per layer',
       'c.activation': 'Activation',
