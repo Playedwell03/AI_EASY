@@ -15,13 +15,15 @@ export async function trainModule(def, overrides = {}) {
   const data = def.makeData(hp);
   const session = def.createSession(tf, hp, data);
   const history = [];
-  const t0 = Date.now();
+  // CPU time of this process, not wall time: other load on the machine must not fail the guard.
+  const c0 = process.cpuUsage();
   for (let i = 0; i < hp.epochs; i++) {
     const r = await session.epoch();
     history.push(r);
     if (!Number.isFinite(r.trainLoss) || !Number.isFinite(r.valLoss)) break;
   }
-  const seconds = (Date.now() - t0) / 1000;
+  const used = process.cpuUsage(c0);
+  const seconds = (used.user + used.system) / 1e6;
   const diagnosis = diagnoseCurves(history, { baselineLoss: def.baselineLoss(hp, data) });
   return { hp, data, session, history, diagnosis, seconds };
 }

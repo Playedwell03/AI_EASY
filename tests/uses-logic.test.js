@@ -121,3 +121,18 @@ test('bert nearest ranks items by similarity to the query vector', () => {
   const items = [{ text: 'a', v: [1, 0] }, { text: 'b', v: [0.7, 0.7] }, { text: 'c', v: [0, 1] }];
   assert.deepEqual(nearest([1, 0.1], items, 2).map((x) => x.text), ['a', 'b']);
 });
+
+import { decideAction, sustained } from '../js/modules/speech/uses.js';
+
+test('speech decideAction ignores unsure predictions', () => {
+  const map = { 0: 'volUp', 1: 'volDown' };
+  assert.equal(decideAction([0.9, 0.1], map, 0.6), 'volUp');
+  assert.equal(decideAction([0.55, 0.45], map, 0.6), null);
+  assert.equal(decideAction([0.1, 0.0, 0.9], map, 0.6), null); // class without an action
+});
+
+test('speech sustained alarms only after enough recent hits', () => {
+  assert.equal(sustained([false, true, true, false, true], 5, 3), true);
+  assert.equal(sustained([true, true, false, false, false], 3, 2), false);
+  assert.equal(sustained([], 3, 1), false);
+});
