@@ -38,7 +38,7 @@ export default {
     { key: 'batchSize', type: 'range', min: 8, max: 128, step: 8, label: 'hp.batchSize', where: 'train' },
   ],
   breakPresets: [
-    { id: 'overfit', label: 'p.overfit', hp: { n: 60, epochs: 60, dense: 64 }, expect: 'overfitting' },
+    { id: 'overfit', label: 'p.overfit', hp: { n: 24, epochs: 80, dense: 64, filters: 8 }, expect: 'overfitting' },
     { id: 'diverge', label: 'p.diverge', hp: { lr: 1 }, expect: 'diverged' },
   ],
   metrics: [
@@ -179,7 +179,7 @@ export default {
       'c.filters': '첫 합성곱층 필터 수',
       'c.dense': 'Dense 층 뉴런 수',
       'c.n': '소리 개수',
-      'p.overfit': '소리 60개로 60에폭 → 과적합',
+      'p.overfit': '소리 24개로 80에폭 → 과적합',
       'p.diverge': '학습률 1 → 발산',
       'm.chance': '무작위로 찍으면 약 17%',
       'm.dataIntro': '여섯 종류의 짧은 소리입니다. ▶를 눌러 들어 보세요. 위는 파형(시간에 따른 떨림), 아래는 스펙트로그램(가로=시간, 세로=높이, 밝을수록 셈)입니다. 같은 종류도 높이·시작 시점·크기·배경 잡음이 매번 다릅니다.',
@@ -217,7 +217,7 @@ export default {
       'c.filters': 'Filters in first conv layer',
       'c.dense': 'Dense layer neurons',
       'c.n': 'Number of sounds',
-      'p.overfit': '60 sounds for 60 epochs → overfitting',
+      'p.overfit': '24 sounds for 80 epochs → overfitting',
       'p.diverge': 'Learning rate 1 → diverges',
       'm.chance': 'Random guessing: about 17%',
       'm.dataIntro': 'Six kinds of short sounds. Press ▶ to listen. Top: waveform (vibration over time). Bottom: spectrogram (across = time, up = pitch, brighter = louder). Each copy differs in pitch, timing, loudness and background noise.',
