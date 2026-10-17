@@ -32,6 +32,13 @@ async function initBackend() {
     showNotice('notice.cpuFallback');
   }
   await tf.ready();
+  // Remember the best backend this browser has; modules may temporarily prefer another.
+  window.__aiEasyBackend = tf.getBackend();
+  showBackend();
+  window.addEventListener('aieasy:backend', showBackend);
+}
+
+function showBackend() {
   backendPill.textContent = tf.getBackend();
   backendPill.hidden = false;
 }

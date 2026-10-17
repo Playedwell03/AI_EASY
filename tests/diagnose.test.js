@@ -88,3 +88,11 @@ test('a moderate gap while both losses are still falling stays good', () => {
   const val = [2.1, 1.1, 0.65, 0.48, 0.38];
   assert.equal(diagnoseCurves(hist(train, val), { baselineLoss: Math.log(10) }).verdict, 'good');
 });
+
+test('loss that exploded far above the baseline at some point is diverged even if it settles', () => {
+  const train = [45.7, 14.1, 3.8, 1.7, 0.31, 0.22, 0.24, 0.29, 0.22];
+  const val = [45.4, 14.3, 3.7, 1.75, 0.3, 0.22, 0.23, 0.3, 0.22];
+  const d = diagnoseCurves(hist(train, val), { baselineLoss: 0.217 });
+  assert.equal(d.verdict, 'diverged');
+  assert.ok(d.findings.some((f) => f.key === 'f.spiked'));
+});

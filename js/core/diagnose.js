@@ -26,6 +26,15 @@ export function diagnoseCurves(history, { baselineLoss }) {
     return result;
   }
 
+  // A loss that ever shot far above random guessing means training was unstable, even if it later settled.
+  const peak = Math.max(...train);
+  if (peak > 10 * baselineLoss) {
+    result.verdict = 'diverged';
+    result.findings.push({ level: 'bad', key: 'f.spiked', vars: { epoch: train.indexOf(peak) + 1, x: Math.round(peak / baselineLoss) } });
+    result.advice = ['adv.lowerLr'];
+    return result;
+  }
+
   if (n < 3) {
     result.verdict = 'insufficient';
     result.findings.push({ level: 'info', key: 'f.tooFewEpochs', vars: { n } });

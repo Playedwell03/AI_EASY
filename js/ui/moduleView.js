@@ -23,6 +23,7 @@ export function mountModule(el, def, tab) {
     const hp = defaultsFor(def);
     mounted = { def, hp, data: def.makeData(hp), el, tab, activePreset: null, testCache: null, archSel: 0 };
     mounted.runner = makeRunner(mounted);
+    mounted.ready = ensureBackend(def);
     mounted.offLang = onLangChange(() => render());
   }
   mounted.el = el;
@@ -30,9 +31,26 @@ export function mountModule(el, def, tab) {
   render();
 }
 
+// Small recurrent models run faster on the CPU backend than on WebGL (per-op overhead dominates),
+// so a module may declare preferBackend. Switching happens before any session exists.
+async function ensureBackend(def) {
+  const tf = window.tf;
+  if (!tf) return;
+  const target = def.preferBackend || window.__aiEasyBackend || tf.getBackend();
+  if (tf.getBackend() !== target) {
+    await tf.setBackend(target);
+    window.dispatchEvent(new Event('aieasy:backend'));
+  }
+}
+
+function startTraining() {
+  const m = mounted;
+  return m.ready.then(() => { if (mounted === m) return m.runner.start(); });
+}
+
 // Without WebGL, modules may ask for lighter defaults so training still finishes in about a minute.
 function defaultsFor(def) {
-  const cpu = window.tf?.getBackend() === 'cpu';
+  const cpu = (window.__aiEasyBackend || window.tf?.getBackend()) === 'cpu';
   return { ...def.defaults, ...(cpu ? def.cpuDefaults : null) };
 }
 
@@ -186,7 +204,7 @@ function renderTrainTab(body, m) {
   const epochText = h('span', { class: 'mono small muted' });
   const bar = h('div');
   const errText = h('div', { class: 'small', style: { color: 'var(--bad)' } });
-  const startBtn = h('button', { class: 'btn btn-primary', type: 'button', onclick: () => runner.start() });
+  const startBtn = h('button', { class: 'btn btn-primary', type: 'button', onclick: () => startTraining() });
   const pauseBtn = h('button', { class: 'btn', type: 'button', onclick: () => runner.pause() }, t('btn.pause'));
   const resetBtn = h('button', { class: 'btn', type: 'button', onclick: () => applyHp({}, { preset: m.activePreset }) }, t('btn.reset'));
   const diagLink = h('a', { class: 'btn', href: moduleHref(def.id, 'diagnose') }, `${t('tab.diagnose')} →`);
@@ -210,7 +228,7 @@ function renderTrainTab(body, m) {
       h('div', { class: 'presets' }, def.breakPresets.map((p) =>
         h('button', {
           class: `btn preset-btn${m.activePreset === p.id ? ' btn-primary' : ''}`, type: 'button',
-          onclick: () => { m.hp = defaultsFor(def); applyHp(p.hp, { preset: p.id }); mounted.runner.start(); },
+          onclick: () => { m.hp = defaultsFor(def); applyHp(p.hp, { preset: p.id }); startTraining(); },
         }, label(def, p.label))))),
     h('div', { class: 'grid-2' },
       h('div', { class: 'card' }, h('h3', null, t('train.lossChart')), loss.el, h('p', { class: 'help', style: { marginTop: '8px' } }, t('train.lossHelp'))),
