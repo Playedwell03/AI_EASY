@@ -18,6 +18,16 @@ function color(c) {
   return c?.startsWith('--') ? cssVar(c) : c;
 }
 
+// Resolve any CSS color string to [r, g, b].
+function rgb(c) {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 1;
+  const x = cv.getContext('2d');
+  x.fillStyle = c;
+  x.fillRect(0, 0, 1, 1);
+  return Array.from(x.getImageData(0, 0, 1, 1).data.slice(0, 3));
+}
+
 function niceTicks(lo, hi, count = 4) {
   if (!(hi > lo)) { hi = lo + 1; }
   const step0 = (hi - lo) / count;
@@ -209,19 +219,27 @@ export function scatter(canvas, points, opts = {}) {
     const X = (v) => ((v - lo) / (hi - lo)) * w;
     const Y = (v) => (1 - (v - lo) / (hi - lo)) * hgt;
     if (field) {
-      const c0 = color(colors[0]);
-      const c1 = color(colors[1]);
-      const cell = w / field.n;
-      const cellH = hgt / field.n;
+      // Paint the n×n field into a tiny image and let the browser smooth it up to size.
+      const [r0, g0, b0] = rgb(color(colors[0]));
+      const [r1, g1, b1] = rgb(color(colors[1]));
+      const off = document.createElement('canvas');
+      off.width = off.height = field.n;
+      const octx = off.getContext('2d');
+      const img = octx.createImageData(field.n, field.n);
       for (let j = 0; j < field.n; j++) {
         for (let i = 0; i < field.n; i++) {
           const p = field.values[j * field.n + i];
-          ctx.fillStyle = p >= 0.5 ? c1 : c0;
-          ctx.globalAlpha = 0.08 + Math.abs(p - 0.5) * 0.4;
-          ctx.fillRect(i * cell, hgt - (j + 1) * cellH, cell + 0.5, cellH + 0.5);
+          const k = ((field.n - 1 - j) * field.n + i) * 4;
+          const one = p >= 0.5;
+          img.data[k] = one ? r1 : r0;
+          img.data[k + 1] = one ? g1 : g0;
+          img.data[k + 2] = one ? b1 : b0;
+          img.data[k + 3] = Math.round((0.1 + Math.abs(p - 0.5) * 0.6) * 255);
         }
       }
-      ctx.globalAlpha = 1;
+      octx.putImageData(img, 0, 0);
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(off, 0, 0, w, hgt);
     } else {
       ctx.fillStyle = cssVar('--surface-2');
       ctx.fillRect(0, 0, w, hgt);

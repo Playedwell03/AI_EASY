@@ -19,6 +19,13 @@ export function diagnoseCurves(history, { baselineLoss }) {
     return result;
   }
 
+  if (n && train[n - 1] > 3 * baselineLoss) {
+    result.verdict = 'diverged';
+    result.findings.push({ level: 'bad', key: 'f.worseThanBaseline', vars: { loss: round(train[n - 1]), baseline: round(baselineLoss) } });
+    result.advice = ['adv.lowerLr'];
+    return result;
+  }
+
   if (n < 3) {
     result.verdict = 'insufficient';
     result.findings.push({ level: 'info', key: 'f.tooFewEpochs', vars: { n } });
@@ -31,7 +38,10 @@ export function diagnoseCurves(history, { baselineLoss }) {
   for (let i = 1; i < n; i++) if (val[i] < val[m]) m = i;
   result.bestEpoch = m + 1;
 
-  if (val[last] > 1.1 * val[m] && last - m >= 3 && train[last] < train[m]) {
+  // Overfitting needs a real rise: 10% relative AND at least 5% of the baseline in absolute terms,
+  // so jitter around a near-zero loss is not mistaken for it.
+  const rise = val[last] - val[m];
+  if (val[last] > 1.1 * val[m] && rise > 0.05 * baselineLoss && last - m >= 3 && train[last] < train[m]) {
     result.verdict = 'overfitting';
     result.findings.push({
       level: 'bad', key: 'f.valRoseAfter',
@@ -59,7 +69,7 @@ export function diagnoseCurves(history, { baselineLoss }) {
       : { level: 'warn', key: 'f.gapLarge', vars: { gapPct } });
   }
 
-  result.stillImproving = n >= 4 && val[last] < 0.98 * val[last - 3];
+  result.stillImproving = n >= 4 && val[last] < 0.98 * val[last - 3] && val[last - 3] - val[last] > 0.01 * baselineLoss;
   if (result.stillImproving && !result.advice.includes('adv.trainMore')) {
     result.findings.push({ level: 'info', key: 'f.stillImproving' });
     result.advice.push('adv.trainMore');

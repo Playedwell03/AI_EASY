@@ -55,3 +55,22 @@ test('good curve that plateaued is not still improving', () => {
   assert.equal(d.stillImproving, false);
   assert.deepEqual(d.advice, []);
 });
+
+test('tiny jitter after near-zero loss is not overfitting', () => {
+  // Relative rise is large (0.003 → 0.011) but absolute rise is negligible vs. the baseline.
+  const train = [0.4, 0.1, 0.02, 0.005, 0.004, 0.003, 0.003, 0.003];
+  const val = [0.39, 0.1, 0.03, 0.006, 0.003, 0.009, 0.012, 0.011];
+  assert.equal(diagnoseCurves(hist(train, val), { baselineLoss: 0.69 }).verdict, 'good');
+});
+
+test('loss stuck far above random guessing is diverged', () => {
+  const d = diagnoseCurves(hist([8.4, 8.4, 8.4, 8.4], [6.9, 6.9, 6.9, 6.9]), { baselineLoss: 0.69 });
+  assert.equal(d.verdict, 'diverged');
+  assert.ok(d.findings.some((f) => f.key === 'f.worseThanBaseline'));
+});
+
+test('negligible absolute drop near zero is not "still improving"', () => {
+  const d = diagnoseCurves(hist([0.4, 0.05, 0.005, 0.004, 0.003, 0.003], [0.4, 0.05, 0.006, 0.006, 0.005, 0.004]), { baselineLoss: 0.69 });
+  assert.equal(d.verdict, 'good');
+  assert.equal(d.stillImproving, false);
+});

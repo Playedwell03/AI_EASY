@@ -101,6 +101,7 @@ export const COMMON = {
 
     'f.lossNaN': '에폭 {epoch}에서 손실이 숫자가 아닌 값(NaN/무한대)이 되었습니다.',
     'f.lossExploded': '손실이 {from}에서 {to}로 오히려 커졌습니다.',
+    'f.worseThanBaseline': '손실({loss})이 무작위로 찍었을 때({baseline})보다 훨씬 큽니다. 모델이 망가진 상태입니다.',
     'f.tooFewEpochs': '지금까지 {n}에폭만 학습했습니다. 최소 3에폭은 필요합니다.',
     'f.valRoseAfter': '검증 손실이 에폭 {epoch}에서 가장 낮았고, 그 뒤로 {pct}% 다시 올라갔습니다.',
     'f.trainKeptFalling': '그동안 학습 손실은 계속 내려갔습니다. 학습 데이터만 외우고 있다는 신호입니다.',
@@ -241,6 +242,7 @@ export const COMMON = {
 
     'f.lossNaN': 'At epoch {epoch} the loss became not-a-number (NaN/infinity).',
     'f.lossExploded': 'Loss grew from {from} to {to} instead of shrinking.',
+    'f.worseThanBaseline': 'Loss ({loss}) is far worse than random guessing ({baseline}). The model is broken.',
     'f.tooFewEpochs': 'Only {n} epoch(s) so far. At least 3 are needed.',
     'f.valRoseAfter': 'Validation loss was lowest at epoch {epoch}, then rose again by {pct}%.',
     'f.trainKeptFalling': 'Meanwhile training loss kept falling — a sign it is memorizing the training data.',

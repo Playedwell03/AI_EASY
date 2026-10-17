@@ -73,7 +73,7 @@ function render() {
       h('a', { class: 'tab', href: moduleHref(def.id, id), 'aria-current': id === tab ? 'page' : null },
         h('span', { class: 'n' }, String(i + 1)), t(`tab.${id}`)))),
     body,
-    nextStep(def, tab));
+    nextStep(def, tab) || '');
   ({ arch: renderArchTab, data: renderDataTab, train: renderTrainTab, diagnose: renderDiagnoseTab, test: renderTestTab })[tab](body, m);
 }
 
@@ -131,13 +131,14 @@ function formatControl(c, v) {
 function renderArchTab(body, m) {
   const archEl = h('div');
   const ctl = controlsFor(m, 'arch');
-  body.append(
+  body.append(...[
     m.def.archNote && h('div', { class: 'disclaimer', style: { marginBottom: '16px' } }, tx(m.def, m.def.archNote)),
     m.def.renderArchIntro && (() => { const d = h('div', { style: { marginBottom: '16px' } }); m.def.renderArchIntro(d, ctxFor(m)); return d; })(),
     archEl,
     ctl && h('div', { class: 'card', style: { marginTop: '16px' } },
       h('div', { class: 'card-title' }, h('h3', null, t('arch.settings')), h('span', { class: 'small muted' }, t('arch.changeResets'))),
-      ctl));
+      ctl),
+  ].filter(Boolean));
   renderArch(archEl, m.def.architecture(m.hp), { selected: m.archSel, onSelect: (i) => { m.archSel = i; } });
 }
 
