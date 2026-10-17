@@ -102,7 +102,7 @@ export function createSession(tf, hp, data) {
         }, true, vars);
         ids.dispose();
         cost?.dispose();
-        if ((b / hp.batchSize) % 8 === 7) await tf.nextFrame?.();
+        await tf.nextFrame(); // keep the page responsive
       }
       const tr = await evaluate('train');
       const v = await evaluate('val');

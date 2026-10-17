@@ -55,6 +55,7 @@ export function createSession(tf, hp, data) {
         const cost = optimizer.minimize(() => lossOf(tf.gather(S.train.x, ids), tf.gather(S.train.y, ids)), true, vars);
         ids.dispose();
         cost?.dispose();
+        await tf.nextFrame(); // keep the page responsive (and spread out first-time GPU compiles)
       }
       const tr = await evaluate('train');
       const v = await evaluate('val');
