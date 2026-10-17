@@ -5,8 +5,10 @@ import { diagnoseCurves } from '../js/core/diagnose.js';
 await tf.setBackend('cpu');
 export { tf };
 
+// Node's 'cpu' backend is the same engine a browser without WebGL uses, so tests run the
+// module's cpuDefaults — exactly what such a browser would run.
 export async function trainModule(def, overrides = {}) {
-  const hp = { ...def.defaults, ...overrides };
+  const hp = { ...def.defaults, ...def.cpuDefaults, ...overrides };
   const data = def.makeData(hp);
   const session = def.createSession(tf, hp, data);
   const history = [];

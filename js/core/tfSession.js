@@ -13,6 +13,11 @@ import { mulberry32, shuffle } from './rng.js';
 export function layersSession(tf, { model, train, val, test, batchSize, seed, evaluate }) {
   const rand = mulberry32(seed * 7919 + 13);
   const n = train.x.shape[0];
+  // Measuring training loss on a capped subset keeps per-epoch evaluation cheap.
+  const EVAL_CAP = 600;
+  const trainEval = n > EVAL_CAP
+    ? { x: train.x.slice(0, EVAL_CAP), y: train.y.slice(0, EVAL_CAP) }
+    : train;
   let disposed = false;
 
   return {
@@ -31,7 +36,7 @@ export function layersSession(tf, { model, train, val, test, batchSize, seed, ev
         ys.dispose();
       }
       const v = await evaluate(model, val.x, val.y);
-      const tr = await evaluate(model, train.x, train.y);
+      const tr = await evaluate(model, trainEval.x, trainEval.y);
       // Report the training loss measured after the epoch so it is comparable with validation loss.
       return {
         trainLoss: Number.isFinite(trainLoss) ? tr.loss : trainLoss,
@@ -51,6 +56,7 @@ export function layersSession(tf, { model, train, val, test, batchSize, seed, ev
       disposed = true;
       model.optimizer?.dispose();
       model.dispose();
+      if (trainEval !== train) { trainEval.x.dispose(); trainEval.y.dispose(); }
       for (const part of [train, val, test]) {
         part.x.dispose();
         part.y.dispose();

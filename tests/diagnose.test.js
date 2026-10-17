@@ -74,3 +74,17 @@ test('negligible absolute drop near zero is not "still improving"', () => {
   assert.equal(d.verdict, 'good');
   assert.equal(d.stillImproving, false);
 });
+
+test('a large train/val gap with near-zero train loss is overfitting even if val plateaus', () => {
+  const train = [2.2, 1.0, 0.3, 0.05, 0.01, 0.002, 0.001, 0.001];
+  const val = [2.3, 1.2, 0.6, 0.4, 0.36, 0.37, 0.37, 0.37];
+  const d = diagnoseCurves(hist(train, val), { baselineLoss: Math.log(10) });
+  assert.equal(d.verdict, 'overfitting');
+  assert.ok(d.findings.some((f) => f.key === 'f.bigGap'));
+});
+
+test('a moderate gap while both losses are still falling stays good', () => {
+  const train = [2.0, 1.0, 0.5, 0.3, 0.2];
+  const val = [2.1, 1.1, 0.65, 0.48, 0.38];
+  assert.equal(diagnoseCurves(hist(train, val), { baselineLoss: Math.log(10) }).verdict, 'good');
+});

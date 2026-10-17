@@ -53,7 +53,7 @@ test('every dictionary has identical ko/en keys', () => {
 
 test('every diagnosis key the engine can emit has text', () => {
   const keys = [
-    'f.lossNaN', 'f.lossExploded', 'f.worseThanBaseline', 'f.tooFewEpochs', 'f.valRoseAfter', 'f.trainKeptFalling',
+    'f.lossNaN', 'f.lossExploded', 'f.worseThanBaseline', 'f.tooFewEpochs', 'f.valRoseAfter', 'f.trainKeptFalling', 'f.bigGap', 'f.valStalled',
     'f.nearBaseline', 'f.beatsBaseline', 'f.gapSmall', 'f.gapLarge', 'f.stillImproving',
     'adv.lowerLr', 'adv.trainMore', 'adv.earlyStop', 'adv.regularize', 'adv.moreData',
     'adv.biggerModel', 'adv.raiseLr',

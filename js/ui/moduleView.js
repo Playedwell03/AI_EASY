@@ -20,7 +20,7 @@ export function unmountModule() {
 export function mountModule(el, def, tab) {
   if (!mounted || mounted.def !== def) {
     unmountModule();
-    const hp = { ...def.defaults };
+    const hp = defaultsFor(def);
     mounted = { def, hp, data: def.makeData(hp), el, tab, activePreset: null, testCache: null, archSel: 0 };
     mounted.runner = makeRunner(mounted);
     mounted.offLang = onLangChange(() => render());
@@ -28,6 +28,12 @@ export function mountModule(el, def, tab) {
   mounted.el = el;
   mounted.tab = tab;
   render();
+}
+
+// Without WebGL, modules may ask for lighter defaults so training still finishes in about a minute.
+function defaultsFor(def) {
+  const cpu = window.tf?.getBackend() === 'cpu';
+  return { ...def.defaults, ...(cpu ? def.cpuDefaults : null) };
 }
 
 function makeRunner(m) {
@@ -199,12 +205,12 @@ function renderTrainTab(body, m) {
       errText),
     def.breakPresets?.length && h('div', { class: 'card' },
       h('div', { class: 'card-title' }, h('h3', null, t('train.presets')),
-        m.activePreset && h('button', { class: 'btn btn-sm', type: 'button', onclick: () => { m.hp = { ...def.defaults }; applyHp({}); } }, t('btn.defaults'))),
+        m.activePreset && h('button', { class: 'btn btn-sm', type: 'button', onclick: () => { m.hp = defaultsFor(def); applyHp({}); } }, t('btn.defaults'))),
       h('p', { class: 'help' }, t('train.presetsHelp')),
       h('div', { class: 'presets' }, def.breakPresets.map((p) =>
         h('button', {
           class: `btn preset-btn${m.activePreset === p.id ? ' btn-primary' : ''}`, type: 'button',
-          onclick: () => { m.hp = { ...def.defaults }; applyHp(p.hp, { preset: p.id }); mounted.runner.start(); },
+          onclick: () => { m.hp = defaultsFor(def); applyHp(p.hp, { preset: p.id }); mounted.runner.start(); },
         }, label(def, p.label))))),
     h('div', { class: 'grid-2' },
       h('div', { class: 'card' }, h('h3', null, t('train.lossChart')), loss.el, h('p', { class: 'help', style: { marginTop: '8px' } }, t('train.lossHelp'))),

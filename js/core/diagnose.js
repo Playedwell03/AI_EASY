@@ -38,16 +38,27 @@ export function diagnoseCurves(history, { baselineLoss }) {
   for (let i = 1; i < n; i++) if (val[i] < val[m]) m = i;
   result.bestEpoch = m + 1;
 
-  // Overfitting needs a real rise: 10% relative AND at least 5% of the baseline in absolute terms,
+  // Overfitting needs a real rise: 10% relative AND at least 3% of the baseline in absolute terms,
   // so jitter around a near-zero loss is not mistaken for it.
   const rise = val[last] - val[m];
-  if (val[last] > 1.1 * val[m] && rise > 0.05 * baselineLoss && last - m >= 3 && train[last] < train[m]) {
+  if (val[last] > 1.1 * val[m] && rise > 0.03 * baselineLoss && last - m >= 3 && train[last] < train[m]) {
     result.verdict = 'overfitting';
     result.findings.push({
       level: 'bad', key: 'f.valRoseAfter',
       vars: { epoch: m + 1, pct: Math.round(((val[last] - val[m]) / val[m]) * 100) },
     });
     result.findings.push({ level: 'warn', key: 'f.trainKeptFalling' });
+    result.advice = ['adv.earlyStop', 'adv.regularize', 'adv.moreData'];
+    return result;
+  }
+
+  // Memorized the training set: train loss far below validation loss, and validation has stopped improving.
+  const gap = val[last] - train[last];
+  const valFlat = n >= 4 && val[last] >= 0.98 * val[last - 3];
+  if (gap > 0.12 * baselineLoss && train[last] < 0.25 * val[last] && valFlat) {
+    result.verdict = 'overfitting';
+    result.findings.push({ level: 'bad', key: 'f.bigGap', vars: { train: round(train[last]), val: round(val[last]), gapPct: Math.round((gap / baselineLoss) * 100) } });
+    result.findings.push({ level: 'warn', key: 'f.valStalled' });
     result.advice = ['adv.earlyStop', 'adv.regularize', 'adv.moreData'];
     return result;
   }
