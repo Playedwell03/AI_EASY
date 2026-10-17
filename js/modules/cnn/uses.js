@@ -75,7 +75,11 @@ const zip = {
       if (preds.every((p) => !p)) { result.textContent = '…'; note.textContent = ''; return; }
       const first = preds[0]?.digit;
       result.replaceChildren(`📦 ${r.text} → `, first != null ? h('span', null, ctx.L(REGIONS[first])) : '?');
-      note.replaceChildren(r.unsure.length ? h('span', { class: 'tag-warn' }, ctx.t('use.cnn.unsure', { n: r.unsure.map((i) => i + 1).join(', ') })) : h('span', { class: 'tag-good' }, ctx.t('use.cnn.allSure')));
+      const empty = preds.filter((p) => !p).length;
+      const low = r.unsure.filter((i) => preds[i]);
+      note.replaceChildren(empty
+        ? h('span', { class: 'muted' }, ctx.t('use.cnn.fillRest', { n: empty }))
+        : low.length ? h('span', { class: 'tag-warn' }, ctx.t('use.cnn.unsure', { n: low.map((i) => i + 1).join(', ') })) : h('span', { class: 'tag-good' }, ctx.t('use.cnn.allSure')));
     });
     el.append(h('p', { class: 'help' }, ctx.t('use.cnn.zipHelp')), row.el, result, note);
   },
@@ -158,6 +162,7 @@ export const useCases = [zip, calculator, lock, receipt];
 export const USE_TEXT = {
   ko: {
     'use.cnn.zipHelp': '칸마다 숫자 하나씩 쓰세요. 첫 자리로 지역을 정합니다.',
+    'use.cnn.fillRest': '남은 칸 {n}개를 채워 주세요',
     'use.cnn.unsure': '{n}번째 칸은 확신이 낮아요 → 사람이 확인',
     'use.cnn.allSure': '모든 칸을 자신 있게 읽었어요 → 자동 분류',
     'use.cnn.calcHelp': '왼쪽과 오른쪽에 두 자리 숫자를 쓰고 연산을 고르세요(한 자리만 써도 됩니다).',
@@ -172,6 +177,7 @@ export const USE_TEXT = {
   },
   en: {
     'use.cnn.zipHelp': 'Write one digit per box. The first digit picks the region.',
+    'use.cnn.fillRest': 'Fill in the remaining {n} box(es)',
     'use.cnn.unsure': 'Low confidence in box {n} → a person checks it',
     'use.cnn.allSure': 'Read every box confidently → sorted automatically',
     'use.cnn.calcHelp': 'Write a number (one or two digits) on each side and pick an operation.',

@@ -84,7 +84,8 @@ const power = {
     const toKw = (v) => 300 + 60 * v;
     const { future, actual } = forecastFrom(ctx, 24);
     const fc = future.map(toKw);
-    let cap = 340;
+    // Start at the forecast's 75th percentile so a few hours need backup.
+    let cap = Math.round([...fc].sort((a, b) => a - b)[Math.floor(fc.length * 0.75)] / 5) * 5;
     const plan = h('div', { class: 'stack', style: { gap: '4px' } });
     const box = chartBox();
     const draw = () => {
