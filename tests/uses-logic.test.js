@@ -94,3 +94,30 @@ test('rnn charProbs scores each character given the ones before it', () => {
 test('rnn textPerplexity is exp of mean negative log probability', () => {
   assert.ok(Math.abs(textPerplexity('aaa', fakeNext, stoi) - 1 / 0.9) < 1e-9);
 });
+
+import { rankByScore } from '../js/modules/transformer/uses.js';
+
+test('transformer rankByScore sorts candidates by ascending perplexity', () => {
+  const ppl = { a: 3, b: 1.5, c: 9 };
+  assert.deepEqual(rankByScore(['a', 'b', 'c'], (s) => ppl[s]).map((r) => r.text), ['b', 'a', 'c']);
+  assert.equal(rankByScore(['a'], () => 2)[0].score, 2);
+});
+
+import { cosine, shouldFix, nearest } from '../js/modules/bert/uses.js';
+
+test('bert cosine similarity', () => {
+  assert.equal(cosine([1, 0], [1, 0]), 1);
+  assert.equal(cosine([1, 0], [0, 1]), 0);
+  assert.ok(Math.abs(cosine([1, 1], [-1, -1]) + 1) < 1e-9);
+});
+
+test('bert shouldFix only replaces unlikely characters with a much likelier one', () => {
+  assert.equal(shouldFix(0.01, { c: 'x', p: 0.9 }), true);
+  assert.equal(shouldFix(0.4, { c: 'x', p: 0.5 }), false);
+  assert.equal(shouldFix(0.01, { c: 'x', p: 0.03 }), false);
+});
+
+test('bert nearest ranks items by similarity to the query vector', () => {
+  const items = [{ text: 'a', v: [1, 0] }, { text: 'b', v: [0.7, 0.7] }, { text: 'c', v: [0, 1] }];
+  assert.deepEqual(nearest([1, 0.1], items, 2).map((x) => x.text), ['a', 'b']);
+});

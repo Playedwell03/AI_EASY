@@ -85,6 +85,7 @@ export const COMMON = {
     'train.presetsHelp': '나쁜 설정으로 학습해 보고, 진단 탭이 문제를 잡아내는지 확인해 보세요.',
     'train.inside': '모델 안을 들여다보기',
     'train.seed': '시드(Seed) {seed}',
+    'train.warmup': '첫 에폭은 계산 준비(GPU 프로그램 만들기) 때문에 조금 더 걸립니다. 이 탭을 화면에 띄워 두세요 — 다른 탭으로 가면 브라우저가 학습을 늦춥니다.',
 
     'hp.lr': '학습률(Learning rate)',
     'hp.epochs': '에폭 수',
@@ -243,6 +244,7 @@ export const COMMON = {
     'train.presetsHelp': 'Train with a bad setting, then see whether the Diagnose tab catches the problem.',
     'train.inside': 'Look inside the model',
     'train.seed': 'Seed {seed}',
+    'train.warmup': 'The first epoch takes longer while the GPU programs are prepared. Keep this tab on screen — browsers slow down background tabs.',
 
     'hp.lr': 'Learning rate',
     'hp.epochs': 'Epochs',

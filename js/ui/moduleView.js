@@ -209,6 +209,7 @@ function renderTrainTab(body, m) {
   const epochText = h('span', { class: 'mono small muted' });
   const bar = h('div');
   const errText = h('div', { class: 'small', style: { color: 'var(--bad)' } });
+  const warm = h('div', { class: 'small muted', hidden: true }, t('train.warmup'));
   const startBtn = h('button', { class: 'btn btn-primary', type: 'button', onclick: () => startTraining() });
   const pauseBtn = h('button', { class: 'btn', type: 'button', onclick: () => runner.pause() }, t('btn.pause'));
   const resetBtn = h('button', { class: 'btn', type: 'button', onclick: () => applyHp({}, { preset: m.activePreset }) }, t('btn.reset'));
@@ -225,7 +226,7 @@ function renderTrainTab(body, m) {
       controlsFor(m, 'train'),
       h('div', { class: 'row', style: { marginTop: '16px' } }, startBtn, pauseBtn, resetBtn, diagLink),
       h('div', { class: 'status-line', style: { marginTop: '12px' } }, dot, stateText, h('div', { class: 'progress' }, bar), epochText),
-      errText),
+      warm, errText),
     def.breakPresets?.length && h('div', { class: 'card' },
       h('div', { class: 'card-title' }, h('h3', null, t('train.presets')),
         m.activePreset && h('button', { class: 'btn btn-sm', type: 'button', onclick: () => { m.hp = defaultsFor(def); applyHp({}); } }, t('btn.defaults'))),
@@ -253,6 +254,7 @@ function renderTrainTab(body, m) {
     dot.className = `status-dot ${s}`;
     stateText.textContent = t(`state.${s}`);
     errText.textContent = s === 'error' ? String(runner.error?.message || runner.error) : '';
+    warm.hidden = !(s === 'running' && hist.length === 0);
     epochText.textContent = `${t('train.epochOf', { n: hist.length, total: runner.epochs })} · ${t('train.seed', { seed: m.hp.seed })}`;
     bar.style.width = `${(hist.length / runner.epochs) * 100}%`;
     startBtn.textContent = s === 'paused' ? t('btn.resume') : t('btn.start');

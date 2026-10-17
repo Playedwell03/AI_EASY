@@ -1,7 +1,7 @@
 // A tiny GPT-style character model: causal self-attention, trained to predict every next character.
 import { mulberry32, shuffle } from '../../core/rng.js';
 import { makeTextData, encode } from '../../shared/corpus.js';
-import { createEncoder } from '../../shared/attention.js';
+import { createEncoder, vari } from '../../shared/attention.js';
 import { addGeneration } from '../rnn/model.js';
 
 export function makeData(hp) {
@@ -13,8 +13,8 @@ export function createSession(tf, hp, data) {
   const T = hp.seqLen;
   const D = hp.dModel;
   const enc = createEncoder(tf, { vocab: V, dModel: D, heads: hp.heads, ff: D * 2, blocks: hp.blocks, maxLen: T, seed: hp.seed });
-  const Wout = tf.variable(tf.randomNormal([D, V], 0, 1 / Math.sqrt(D), 'float32', hp.seed * 3 + 11));
-  const bout = tf.variable(tf.zeros([V]));
+  const Wout = vari(tf, tf.randomNormal([D, V], 0, 1 / Math.sqrt(D), 'float32', hp.seed * 3 + 11));
+  const bout = vari(tf, tf.zeros([V]));
   const vars = [...enc.variables, Wout, bout];
   const optimizer = tf.train.adam(hp.lr);
   // Targets for every position: the window shifted by one, ending with the next character.

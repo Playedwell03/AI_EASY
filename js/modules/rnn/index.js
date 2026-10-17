@@ -33,7 +33,7 @@ export function genLogViz(el, ctx) {
       if (!s) { log.replaceChildren(); return; }
       const n = ctx.runner.history.length;
       if (n && s.genLog.at(-1)?.epoch !== n) {
-        s.genLog.push({ epoch: n, text: prompt + s.generate(prompt, 50, 0.5, mulberry32(ctx.hp.seed + n)) });
+        s.genLog.push({ epoch: n, text: prompt + s.generate(prompt, 36, 0.5, mulberry32(ctx.hp.seed + n)) });
       }
       log.replaceChildren(...[...s.genLog].reverse().map((g) =>
         h('div', null, h('div', { class: 'ep' }, ctx.t('train.epochOf', { n: g.epoch, total: ctx.runner.epochs })), h('div', { class: 'gen-text' }, g.text))));

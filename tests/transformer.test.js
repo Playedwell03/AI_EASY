@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { tf, trainModule, slow } from './helpers.js';
 import { mulberry32 } from '../js/core/rng.js';
-import { initBlockParams, multiHeadAttention, transformerBlock, disposeParams } from '../js/shared/attention.js';
+import { initBlockParams, multiHeadAttention, transformerBlock, disposeParams, createEncoder } from '../js/shared/attention.js';
 import transformer from '../js/modules/transformer/index.js';
 
 function attentionWeights(causal) {
@@ -30,6 +30,13 @@ test('bidirectional attention can look both ways', () => {
   const row = w[0][0][0];
   assert.ok(Math.abs(row.reduce((a, v) => a + v, 0) - 1) < 1e-5);
   assert.ok(row.slice(1).some((v) => v > 1e-3));
+});
+
+test('createEncoder leaves no tensors behind after dispose', () => {
+  const before = tf.memory().numTensors;
+  const enc = createEncoder(tf, { vocab: 10, dModel: 8, heads: 2, ff: 16, blocks: 2, maxLen: 6, seed: 1 });
+  enc.dispose();
+  assert.equal(tf.memory().numTensors, before);
 });
 
 test('transformerBlock keeps the shape', () => {

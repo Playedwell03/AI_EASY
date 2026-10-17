@@ -1,8 +1,15 @@
 // Minimal Transformer pieces written with plain tf ops so attention weights can be shown.
 // Shapes: x is [batch, time, dModel]; attention weights are [batch, heads, time, time].
 
+// tf.variable keeps its own copy; dispose the initial tensor so nothing leaks.
+export function vari(tf, t) {
+  const v = tf.variable(t);
+  t.dispose();
+  return v;
+}
+
 function normal(tf, shape, std, seed) {
-  return tf.variable(tf.randomNormal(shape, 0, std, 'float32', seed));
+  return vari(tf, tf.randomNormal(shape, 0, std, 'float32', seed));
 }
 
 export function initBlockParams(tf, dModel, heads, ff, seed) {
@@ -13,14 +20,14 @@ export function initBlockParams(tf, dModel, heads, ff, seed) {
     Wk: normal(tf, [dModel, dModel], std, s + 2),
     Wv: normal(tf, [dModel, dModel], std, s + 3),
     Wo: normal(tf, [dModel, dModel], std / Math.sqrt(2), s + 4),
-    ln1g: tf.variable(tf.ones([dModel])),
-    ln1b: tf.variable(tf.zeros([dModel])),
-    ln2g: tf.variable(tf.ones([dModel])),
-    ln2b: tf.variable(tf.zeros([dModel])),
+    ln1g: vari(tf, tf.ones([dModel])),
+    ln1b: vari(tf, tf.zeros([dModel])),
+    ln2g: vari(tf, tf.ones([dModel])),
+    ln2b: vari(tf, tf.zeros([dModel])),
     W1: normal(tf, [dModel, ff], std, s + 5),
-    b1: tf.variable(tf.zeros([ff])),
+    b1: vari(tf, tf.zeros([ff])),
     W2: normal(tf, [ff, dModel], 1 / Math.sqrt(ff) / Math.sqrt(2), s + 6),
-    b2: tf.variable(tf.zeros([dModel])),
+    b2: vari(tf, tf.zeros([dModel])),
   };
 }
 
@@ -78,8 +85,8 @@ export function createEncoder(tf, { vocab, dModel, heads, ff, blocks, maxLen, se
   const params = {
     tok: normal(tf, [vocab, dModel], 0.1, seed * 7 + 1),
     pos: normal(tf, [maxLen, dModel], 0.1, seed * 7 + 2),
-    lnfg: tf.variable(tf.ones([dModel])),
-    lnfb: tf.variable(tf.zeros([dModel])),
+    lnfg: vari(tf, tf.ones([dModel])),
+    lnfb: vari(tf, tf.zeros([dModel])),
   };
   const layers = Array.from({ length: blocks }, (_, i) => initBlockParams(tf, dModel, heads, ff, seed * 13 + i));
   return {
