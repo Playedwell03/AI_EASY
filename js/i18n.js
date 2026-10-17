@@ -40,6 +40,7 @@ export const COMMON = {
     'state.paused': '일시정지됨',
     'state.done': '학습 완료',
     'state.diverged': '학습이 발산해서 멈췄습니다',
+    'state.error': '오류로 학습이 멈췄습니다',
 
     'arch.clickHint': '블록을 누르면 그 층이 하는 일을 볼 수 있어요.',
     'arch.input': '입력 모양',
@@ -83,6 +84,8 @@ export const COMMON = {
     'diag.metrics': '핵심 지표',
     'diag.bestEpoch': '검증 손실이 가장 낮았던 지점: 에폭 {n}',
     'diag.baseline': '무작위로 찍었을 때의 손실(기준선): {v}',
+    'diag.baselineShort': '기준선(무작위 추측) 손실',
+    'diag.extraProblem': '손실 곡선은 좋아 보이지만, 아래 추가 검사에서 문제가 발견되었습니다. 근거 목록을 확인해 보세요.',
     'diag.howTo': '판정 방법: 학습 손실과 검증 손실 곡선의 모양, 그리고 "아무것도 배우지 않고 찍었을 때"의 손실과 비교해 판단합니다.',
 
     'verdict.good': '잘 학습되었습니다',
@@ -121,6 +124,8 @@ export const COMMON = {
     'test.try': '직접 해 보기',
     'test.mistakes': '틀린 예시',
     'test.running': '테스트 중…',
+    'test.waitTraining': '학습이 진행 중입니다. 학습이 끝나거나 일시정지한 뒤에 테스트할 수 있어요.',
+    'test.explain': '테스트 세트는 학습에도, 설정을 고르는 데에도 한 번도 쓰지 않은 데이터입니다. 여기 점수가 실제 실력에 가장 가깝습니다.',
 
     'metric.accuracy': '정확도',
     'metric.loss': '손실',
@@ -175,6 +180,7 @@ export const COMMON = {
     'state.paused': 'Paused',
     'state.done': 'Training finished',
     'state.diverged': 'Stopped: training diverged',
+    'state.error': 'Stopped because of an error',
 
     'arch.clickHint': 'Click a block to see what that layer does.',
     'arch.input': 'Input shape',
@@ -218,6 +224,8 @@ export const COMMON = {
     'diag.metrics': 'Key metrics',
     'diag.bestEpoch': 'Lowest validation loss at epoch {n}',
     'diag.baseline': 'Loss of random guessing (baseline): {v}',
+    'diag.baselineShort': 'Baseline (random guess) loss',
+    'diag.extraProblem': 'The loss curves look fine, but the extra checks below found a problem. See the evidence list.',
     'diag.howTo': 'How this is judged: from the shape of the training and validation loss curves, compared with the loss of guessing without learning anything.',
 
     'verdict.good': 'Trained well',
@@ -256,6 +264,8 @@ export const COMMON = {
     'test.try': 'Try it yourself',
     'test.mistakes': 'Mistakes',
     'test.running': 'Testing…',
+    'test.waitTraining': 'Training is in progress. You can test once it finishes or is paused.',
+    'test.explain': 'The test set was never used for training or for choosing settings. This score is the closest to real-world performance.',
 
     'metric.accuracy': 'Accuracy',
     'metric.loss': 'Loss',
