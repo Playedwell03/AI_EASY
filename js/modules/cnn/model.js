@@ -1,17 +1,8 @@
-import { mulberry32 } from '../../core/rng.js';
-import { splitIndices } from '../../core/split.js';
 import { layersSession, evalCategorical, init } from '../../core/tfSession.js';
-import { makeDigits, DIGIT_SIZE as S } from '../../shared/digits.js';
+import { makeDigitSplits, DIGIT_SIZE as S } from '../../shared/digits.js';
 
 export function makeData(hp) {
-  const rand = mulberry32(hp.seed);
-  const all = makeDigits(hp.n, rand);
-  const idx = splitIndices(hp.n, [0.7, 0.15, 0.15], rand);
-  const pick = (ids) => ({ x: ids.map((i) => all.x[i]), y: ids.map((i) => all.y[i]) });
-  const train = pick(idx.train);
-  const val = pick(idx.val);
-  const test = pick(idx.test);
-  return { train, val, test, meta: { counts: { train: train.x.length, val: val.x.length, test: test.x.length } } };
+  return makeDigitSplits(hp.n, hp.seed);
 }
 
 // Stack a list of Float32Array images into a [n, S, S, 1] tensor.

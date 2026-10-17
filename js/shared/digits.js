@@ -1,6 +1,7 @@
 // Synthetic "handwritten" digits: stroke templates + random pose/thickness/wobble, rasterized
 // with anti-aliasing. Pure JS so it runs in Node tests and the browser alike.
-import { randn } from '../core/rng.js';
+import { randn, mulberry32 } from '../core/rng.js';
+import { splitIndices } from '../core/split.js';
 
 export const DIGIT_SIZE = 20;
 
@@ -34,15 +35,15 @@ function segDist(px, py, ax, ay, bx, by) {
   return Math.sqrt(qx * qx + qy * qy);
 }
 
-export function renderDigit(d, rand, size = DIGIT_SIZE) {
-  const rot = (rand() - 0.5) * 0.6; // about ±17°
-  const scale = 0.8 + rand() * 0.3;
-  const shear = (rand() - 0.5) * 0.4;
-  const tx = (rand() - 0.5) * 4;
-  const ty = (rand() - 0.5) * 4;
-  const thick = 1.2 + rand() * 1.0;
-  const wobble = 0.04;
-  const speckle = rand() * 0.25;
+export function renderDigit(d, rand, size = DIGIT_SIZE, { speckle: useSpeckle = true, variation: v = 1 } = {}) {
+  const rot = (rand() - 0.5) * 0.6 * v; // about ±17° at v=1
+  const scale = 0.95 + (rand() - 0.5) * 0.3 * v;
+  const shear = (rand() - 0.5) * 0.4 * v;
+  const tx = (rand() - 0.5) * 4 * v;
+  const ty = (rand() - 0.5) * 4 * v;
+  const thick = 1.7 + (rand() - 0.5) * 1.0 * v;
+  const wobble = 0.04 * v;
+  const speckle = useSpeckle ? rand() * 0.25 : 0;
   const cos = Math.cos(rot);
   const sin = Math.sin(rot);
   const box = size * 0.8 * scale;
@@ -63,7 +64,7 @@ export function renderDigit(d, rand, size = DIGIT_SIZE) {
         }
       }
       const ink = Math.max(0, Math.min(1, thick / 2 + 0.5 - best));
-      const noise = rand() < 0.06 ? rand() * speckle * 2 : 0;
+      const noise = useSpeckle && rand() < 0.06 ? rand() * speckle * 2 : 0;
       img[py * size + px] = Math.min(1, ink + noise);
     }
   }
@@ -71,12 +72,12 @@ export function renderDigit(d, rand, size = DIGIT_SIZE) {
 }
 
 // n digits with labels cycling 0..9 (balanced).
-export function makeDigits(n, rand, size = DIGIT_SIZE) {
+export function makeDigits(n, rand, size = DIGIT_SIZE, opts) {
   const x = [];
   const y = [];
   for (let i = 0; i < n; i++) {
     const d = i % 10;
-    x.push(renderDigit(d, rand, size));
+    x.push(renderDigit(d, rand, size, opts));
     y.push(d);
   }
   return { x, y };
@@ -125,4 +126,16 @@ export function frameDrawing(src, size = DIGIT_SIZE) {
     }
   }
   return out;
+}
+
+// n digits split 70/15/15 into { train, val, test, meta.counts }, reproducible from seed.
+export function makeDigitSplits(n, seed, opts) {
+  const rand = mulberry32(seed);
+  const all = makeDigits(n, rand, DIGIT_SIZE, opts);
+  const idx = splitIndices(n, [0.7, 0.15, 0.15], rand);
+  const pick = (ids) => ({ x: ids.map((i) => all.x[i]), y: ids.map((i) => all.y[i]) });
+  const train = pick(idx.train);
+  const val = pick(idx.val);
+  const test = pick(idx.test);
+  return { train, val, test, meta: { counts: { train: train.x.length, val: val.x.length, test: test.x.length } } };
 }
