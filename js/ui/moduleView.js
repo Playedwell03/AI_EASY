@@ -9,6 +9,9 @@ import { renderArch } from './archView.js';
 
 let mounted = null; // { def, hp, data, runner, tab, el, offLang, activePreset, testCache, archSel }
 
+// For debugging in the browser console.
+if (typeof window !== 'undefined') window.__aiEasyMounted = () => mounted;
+
 export function unmountModule() {
   if (!mounted) return;
   mounted.runner.reset();
@@ -163,7 +166,7 @@ function renderArchTab(body, m) {
       h('div', { class: 'card-title' }, h('h3', null, t('arch.settings')), h('span', { class: 'small muted' }, t('arch.changeResets'))),
       ctl),
   ].filter(Boolean));
-  renderArch(archEl, m.def.architecture(m.hp), { selected: m.archSel, onSelect: (i) => { m.archSel = i; } });
+  renderArch(archEl, m.def.architecture(m.hp, m.data), { selected: m.archSel, onSelect: (i) => { m.archSel = i; } });
 }
 
 /* ---------- 2. Data ---------- */
