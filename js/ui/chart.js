@@ -283,3 +283,51 @@ export function chartBox() {
   const wrap = h('div', { class: 'chart-wrap' }, canvas);
   return { el: h('div', null, wrap), canvas };
 }
+
+/**
+ * Reliability diagram: for each confidence bin, a bar for "how often it was actually yes"
+ * against the diagonal "what it claimed". bins: [{ lo, hi, count, avgConf, accuracy }].
+ */
+export function reliabilityChart(canvas, bins, { height = 240 } = {}) {
+  let state = bins;
+  function draw() {
+    const { ctx, w, hgt } = setup(canvas, height);
+    const pad = { l: 36, r: 10, t: 10, b: 26 };
+    const W = w - pad.l - pad.r;
+    const H = hgt - pad.t - pad.b;
+    const X = (v) => pad.l + v * W;
+    const Y = (v) => pad.t + (1 - v) * H;
+    ctx.strokeStyle = cssVar('--grid');
+    ctx.fillStyle = cssVar('--muted');
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (const v of [0, 0.5, 1]) {
+      ctx.beginPath(); ctx.moveTo(pad.l, Y(v)); ctx.lineTo(w - pad.r, Y(v)); ctx.stroke();
+      ctx.fillText(`${v * 100}%`, pad.l - 4, Y(v));
+    }
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (const v of [0, 0.5, 1]) ctx.fillText(`${v * 100}%`, X(v), hgt - pad.b + 6);
+    const max = Math.max(1, ...state.map((b) => b.count));
+    for (const b of state) {
+      if (!b.count) continue;
+      const bw = (b.hi - b.lo) * W;
+      ctx.globalAlpha = 0.25 + 0.75 * Math.sqrt(b.count / max);
+      ctx.fillStyle = cssVar('--series-1');
+      ctx.fillRect(X(b.lo) + 1, Y(b.accuracy), bw - 2, Y(0) - Y(b.accuracy));
+      ctx.globalAlpha = 1;
+      // Gap between claim and reality.
+      ctx.strokeStyle = cssVar('--bad');
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(X(b.lo) + bw / 2, Y(b.accuracy)); ctx.lineTo(X(b.lo) + bw / 2, Y(b.avgConf)); ctx.stroke();
+    }
+    ctx.strokeStyle = cssVar('--text');
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(1), Y(1)); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  draw();
+  observe(canvas, draw);
+  return { update(b) { state = b; draw(); } };
+}

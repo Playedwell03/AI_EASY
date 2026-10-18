@@ -136,3 +136,18 @@ test('speech sustained alarms only after enough recent hits', () => {
   assert.equal(sustained([true, true, false, false, false], 3, 2), false);
   assert.equal(sustained([], 3, 1), false);
 });
+
+import { autoSplit, queueCounts } from '../js/modules/jev/uses.js';
+
+test('jev autoSplit automates confident cases and measures their error rate', () => {
+  // confidence = max(p, 1-p); threshold 0.8 automates p=0.95 and p=0.1, sends p=0.6 to a person
+  const r = autoSplit([0.95, 0.1, 0.6, 0.9], [true, false, true, false], 0.8);
+  assert.equal(r.auto, 3);
+  assert.equal(r.human, 1);
+  assert.ok(Math.abs(r.autoRate - 0.75) < 1e-9);
+  assert.ok(Math.abs(r.errorRate - 1 / 3) < 1e-9); // p=0.9 said yes but answer was no
+});
+
+test('jev queueCounts tallies the most likely queue', () => {
+  assert.deepEqual(queueCounts([[0.7, 0.2, 0.1], [0.1, 0.8, 0.1], [0.2, 0.3, 0.5], [0.6, 0.3, 0.1]]), [2, 1, 1]);
+});
