@@ -12,7 +12,7 @@ export const COMMON = {
     'home.title': '모델이 어떻게 배우는지, 직접 눌러 보며 확인하세요',
     'home.intro': '각 모듈은 실제 딥러닝 분야의 대표 구조를 작게 줄인 것입니다. 구조를 살펴보고, 데이터를 보고, 브라우저 안에서 직접 학습시킨 다음, "정말 잘 배운 걸까?"를 그래프와 근거로 확인합니다. 설치할 것은 없습니다.',
     'home.start': '처음이라면 여기부터: 기초 신경망',
-    'home.flow': '모든 모듈은 같은 5단계로 진행됩니다',
+    'home.flow': '모든 모듈은 같은 6단계로 진행됩니다',
     'home.modules': '모듈',
 
     'tab.arch': '구조',
@@ -171,7 +171,7 @@ export const COMMON = {
     'home.title': 'See how models learn, by trying it yourself',
     'home.intro': 'Each module is a small version of a real deep learning architecture. Look at its structure, look at the data, train it right here in your browser, then check with charts and evidence whether it really learned. Nothing to install.',
     'home.start': 'New here? Start with: Basic neural network',
-    'home.flow': 'Every module follows the same 5 steps',
+    'home.flow': 'Every module follows the same 6 steps',
     'home.modules': 'Modules',
 
     'tab.arch': 'Architecture',
