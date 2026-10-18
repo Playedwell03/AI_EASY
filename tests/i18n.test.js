@@ -57,7 +57,7 @@ test('every diagnosis key the engine can emit has text', () => {
     'f.nearBaseline', 'f.beatsBaseline', 'f.gapSmall', 'f.gapLarge', 'f.stillImproving',
     'adv.lowerLr', 'adv.trainMore', 'adv.earlyStop', 'adv.regularize', 'adv.moreData',
     'adv.biggerModel', 'adv.raiseLr',
-    'verdict.good', 'verdict.insufficient', 'verdict.diverged', 'verdict.underfitting', 'verdict.overfitting',
+    'verdict.good', 'verdict.inProgress', 'verdict.insufficient', 'f.inProgress', 'verdict.diverged', 'verdict.underfitting', 'verdict.overfitting',
   ];
   for (const k of keys) assert.ok(COMMON.ko[k] && COMMON.en[k], k);
 });

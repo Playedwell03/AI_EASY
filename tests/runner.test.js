@@ -109,3 +109,35 @@ test('an epoch that throws ends in error state with the error kept', async () =>
   r.reset();
   assert.equal(r.error, null);
 });
+
+test('reset mid-epoch stops the old session within a batch, not at the end of the epoch', async () => {
+  let batches = 0;
+  let r;
+  const sess = fakeSession();
+  sess.epoch = async ({ cancelled } = {}) => {
+    for (let b = 0; b < 20; b++) {
+      if (cancelled?.()) return null;
+      batches++;
+      if (batches === 3) r.reset();
+      await nextFrame();
+    }
+    return { trainLoss: 1, valLoss: 1, metrics: {} };
+  };
+  r = createRunner({ createSession: () => sess, epochs: 5, nextFrame });
+  await r.start();
+  assert.equal(batches, 3);
+  assert.equal(sess.disposed, 1);
+  assert.equal(r.history.length, 0);
+});
+
+test('a listener that re-subscribes during an event does not loop forever', async () => {
+  const r = createRunner({ createSession: () => fakeSession(), epochs: 2, nextFrame });
+  let calls = 0;
+  const subscribe = () => {
+    const off = r.on('epoch', () => { calls++; if (calls > 50) throw new Error('runaway'); off(); subscribe(); });
+  };
+  subscribe();
+  await r.start();
+  assert.equal(r.state, 'done');
+  assert.equal(calls, 2);
+});

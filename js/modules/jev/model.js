@@ -98,10 +98,11 @@ export function createSession(tf, hp, data) {
   let disposed = false;
   let lastVal = null;
   return {
-    async epoch() {
+    async epoch({ cancelled } = {}) {
       const n = data.train.fields.length;
       const order = shuffle(Array.from({ length: n }, (_, i) => i), rand);
       for (let b = 0; b < n; b += hp.batchSize) {
+        if (cancelled?.()) return null;
         const ids = tf.tensor1d(order.slice(b, b + hp.batchSize), 'int32');
         const cost = optimizer.minimize(() => {
           const g = (x) => tf.gather(x, ids);

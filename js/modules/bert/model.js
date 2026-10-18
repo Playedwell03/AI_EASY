@@ -114,13 +114,14 @@ export function createSession(tf, hp, data) {
 
   let disposed = false;
   return {
-    async epoch() {
+    async epoch({ cancelled } = {}) {
       // Fresh masks every epoch (dynamic masking), so the model cannot memorize which slots are hidden.
       const masked = data.train.ids.map((ids) => maskTokens(ids, rand, data.maskOpts));
       const n = masked.length;
       const X = tf.tensor2d(masked.map((m) => m.input), [n, T], 'int32');
       const Y = tf.tensor2d(masked.map((m) => m.labels), [n, T], 'int32');
       for (let b = 0; b < n; b += hp.batchSize) {
+        if (cancelled?.()) { X.dispose(); Y.dispose(); return null; }
         const size = Math.min(hp.batchSize, n - b);
         const cost = optimizer.minimize(() => {
           const { logits } = forward(X.slice([b, 0], [size, T]));

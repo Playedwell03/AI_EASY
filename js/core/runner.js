@@ -14,18 +14,19 @@ export function createRunner({ createSession, epochs, nextFrame }) {
   function setState(s) {
     if (s === state) return;
     state = s;
-    for (const fn of listeners.state) fn(s);
+    for (const fn of [...listeners.state]) fn(s); // copy: listeners may re-subscribe while handling
   }
 
   async function run(myGen, sess) {
     try {
       while (history.length < epochs) {
-        const res = await sess.epoch();
+        // Sessions check this between batches, so a reset stops the old loop within one batch.
+        const res = await sess.epoch({ cancelled: () => myGen !== gen });
         if (myGen !== gen) return; // reset happened during the epoch
         history.push({ epoch: history.length + 1, ...res });
         const bad = !Number.isFinite(res.trainLoss) || !Number.isFinite(res.valLoss);
         if (bad) setState('diverged');
-        for (const fn of listeners.epoch) fn(history[history.length - 1]);
+        for (const fn of [...listeners.epoch]) fn(history[history.length - 1]);
         if (myGen !== gen) return; // reset from an epoch listener
         if (bad) return;
         if (pauseRequested) { setState('paused'); return; }

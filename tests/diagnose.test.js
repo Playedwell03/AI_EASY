@@ -96,3 +96,30 @@ test('loss that exploded far above the baseline at some point is diverged even i
   assert.equal(d.verdict, 'diverged');
   assert.ok(d.findings.some((f) => f.key === 'f.spiked'));
 });
+
+test('mid-training, an early underfitting reading is provisional, not a verdict', () => {
+  const d = diagnoseCurves(hist([0.68, 0.66, 0.6, 0.58]), { baselineLoss: 0.69, inProgress: { done: 4, total: 60 } });
+  assert.equal(d.verdict, 'inProgress');
+  assert.ok(d.findings.some((f) => f.key === 'f.inProgress' && f.vars.done === 4 && f.vars.total === 60));
+});
+
+test('mid-training, divergence is still reported immediately', () => {
+  const d = diagnoseCurves(hist([2, NaN]), { baselineLoss: 0.69, inProgress: { done: 2, total: 60 } });
+  assert.equal(d.verdict, 'diverged');
+});
+
+test('mid-training, a one-epoch validation spike is not reported as overfitting', () => {
+  const train = [0.4, 0.1, 0.05, 0.03, 0.02, 0.015, 0.012];
+  const val = [0.4, 0.1, 0.02, 0.03, 0.021, 0.025, 0.07]; // back near the best, then one spike
+  // Without the in-progress rule this reads as overfitting:
+  assert.equal(diagnoseCurves(hist(train, val), { baselineLoss: 0.69 }).verdict, 'overfitting');
+  const d = diagnoseCurves(hist(train, val), { baselineLoss: 0.69, inProgress: { done: 7, total: 60 } });
+  assert.equal(d.verdict, 'inProgress');
+});
+
+test('mid-training, a sustained validation rise is reported as overfitting', () => {
+  const train = [1.0, 0.6, 0.4, 0.25, 0.15, 0.1, 0.07];
+  const val = [1.0, 0.6, 0.4, 0.5, 0.55, 0.6, 0.65];
+  const d = diagnoseCurves(hist(train, val), { baselineLoss: 0.69, inProgress: { done: 7, total: 60 } });
+  assert.equal(d.verdict, 'overfitting');
+});

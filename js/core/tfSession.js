@@ -22,19 +22,23 @@ export function layersSession(tf, { model, train, val, test, batchSize, seed, ev
 
   return {
     model,
-    async epoch() {
+    async epoch({ cancelled } = {}) {
       const order = tf.tensor1d(shuffle(Array.from({ length: n }, (_, i) => i), rand), 'int32');
       const xs = tf.gather(train.x, order);
       const ys = tf.gather(train.y, order);
       order.dispose();
       let trainLoss;
       try {
-        const h = await model.fit(xs, ys, { epochs: 1, batchSize, shuffle: false, verbose: 0 });
+        const h = await model.fit(xs, ys, {
+          epochs: 1, batchSize, shuffle: false, verbose: 0,
+          callbacks: { onBatchEnd: () => { if (cancelled?.()) model.stopTraining = true; } },
+        });
         trainLoss = h.history.loss[0];
       } finally {
         xs.dispose();
         ys.dispose();
       }
+      if (cancelled?.()) return null;
       const v = await evaluate(model, val.x, val.y);
       const tr = await evaluate(model, trainEval.x, trainEval.y);
       // Report the training loss measured after the epoch so it is comparable with validation loss.

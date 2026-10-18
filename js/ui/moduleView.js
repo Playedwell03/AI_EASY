@@ -4,6 +4,7 @@ import { t, L, onLangChange } from '../i18n.js';
 import { TABS, moduleHref } from '../router.js';
 import { createRunner } from '../core/runner.js';
 import { diagnoseCurves } from '../core/diagnose.js';
+import { dataNeedsRebuild } from '../core/hp.js';
 import { lineChart, chartBox } from './chart.js';
 import { renderArch } from './archView.js';
 import { renderUseTab } from './useView.js';
@@ -25,7 +26,7 @@ export function mountModule(el, def, tab) {
   if (!mounted || mounted.def !== def) {
     unmountModule();
     const hp = defaultsFor(def);
-    mounted = { def, hp, data: def.makeData(hp), el, tab, activePreset: null, testCache: null, archSel: 0 };
+    mounted = { def, hp, data: def.makeData(hp), dataHp: { ...hp }, el, tab, activePreset: null, testCache: null, archSel: 0 };
     mounted.runner = makeRunner(mounted);
     mounted.ready = ensureBackend(def);
     mounted.offLang = onLangChange(() => render());
@@ -72,12 +73,12 @@ function makeRunner(m) {
 // Change hyperparameters: regenerate data if needed and start over.
 function applyHp(patch, { preset = null } = {}) {
   const m = mounted;
-  const before = m.hp;
   m.hp = { ...m.hp, ...patch };
-  const dataKeys = m.def.dataKeys;
-  const dataChanged = !dataKeys || Object.keys(patch).some((k) => dataKeys.includes(k) && before[k] !== m.hp[k]);
   m.runner.reset();
-  if (dataChanged) m.data = m.def.makeData(m.hp);
+  if (dataNeedsRebuild(m.def.dataKeys, m.dataHp, m.hp)) {
+    m.data = m.def.makeData(m.hp);
+    m.dataHp = { ...m.hp };
+  }
   m.runner = makeRunner(m);
   m.activePreset = preset;
   render();
@@ -280,13 +281,22 @@ function renderTrainTab(body, m) {
 function renderDiagnoseTab(body, m) {
   const { def, runner } = m;
   const hist = runner.history;
+  const live = runner.state === 'running' || runner.state === 'paused';
+  // Keep this page in step with training: re-render on every epoch / state change while it is open.
+  if (live) {
+    const again = () => { if (mounted === m && m.tab === 'diagnose') render(); };
+    const offE = runner.on('epoch', again);
+    const offS = runner.on('state', again);
+    const prev = m.cleanup;
+    m.cleanup = () => { prev?.(); offE(); offS(); };
+  }
   if (!hist.length) {
-    body.append(h('div', { class: 'card' }, h('p', null, t('diag.noRun')), h('a', { class: 'btn btn-primary', href: moduleHref(def.id, 'train') }, t('btn.goTrain'))));
+    body.append(h('div', { class: 'card' }, h('p', null, live ? t('train.warmup') : t('diag.noRun')), h('a', { class: 'btn btn-primary', href: moduleHref(def.id, 'train') }, t('btn.goTrain'))));
     return;
   }
   const baselineLoss = def.baselineLoss(m.hp, m.data);
-  const d = diagnoseCurves(hist, { baselineLoss });
-  const level = { good: 'good', insufficient: 'info', diverged: 'bad', underfitting: 'warn', overfitting: 'bad' }[d.verdict];
+  const d = diagnoseCurves(hist, { baselineLoss, inProgress: live ? { done: hist.length, total: runner.epochs } : null });
+  const level = { good: 'good', insufficient: 'info', inProgress: 'info', diverged: 'bad', underfitting: 'warn', overfitting: 'bad' }[d.verdict];
   const icon = { good: '✓', info: '…', bad: '!', warn: '~' }[level];
   const findingsEl = h('ul', { class: 'findings' });
   const extraEl = h('div', { class: 'stack' });
@@ -325,7 +335,7 @@ function renderDiagnoseTab(body, m) {
     { name: t('diag.baseline', { v: fmt(baselineLoss) }), values: hist.map(() => baselineLoss), color: '--muted', dashed: true },
   ]);
 
-  if (def.diagnosePanel && runner.session && d.verdict !== 'diverged') {
+  if (def.diagnosePanel && runner.session && d.verdict !== 'diverged' && !live) {
     const token = {};
     m.diagToken = token;
     Promise.resolve(def.diagnosePanel(extraEl, ctxFor(m), hist)).then((extra = []) => {

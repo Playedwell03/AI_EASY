@@ -42,3 +42,12 @@ for (const p of mlp.breakPresets) {
     assert.equal(tf.memory().numTensors, before, 'session leaks tensors');
   });
 }
+
+test('a cancelled epoch returns null early and the session still disposes cleanly', async () => {
+  const before = tf.memory().numTensors;
+  const hp = { ...mlp.defaults };
+  const s = mlp.createSession(tf, hp, mlp.makeData(hp));
+  assert.equal(await s.epoch({ cancelled: () => true }), null);
+  s.dispose();
+  assert.equal(tf.memory().numTensors, before);
+});

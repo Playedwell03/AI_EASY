@@ -47,10 +47,11 @@ export function createSession(tf, hp, data) {
 
   let disposed = false;
   const s = {
-    async epoch() {
+    async epoch({ cancelled } = {}) {
       const n = S.train.x.shape[0];
       const order = shuffle(Array.from({ length: n }, (_, i) => i), rand);
       for (let b = 0; b < n; b += hp.batchSize) {
+        if (cancelled?.()) return null;
         const ids = tf.tensor1d(order.slice(b, b + hp.batchSize), 'int32');
         const cost = optimizer.minimize(() => lossOf(tf.gather(S.train.x, ids), tf.gather(S.train.y, ids)), true, vars);
         ids.dispose();

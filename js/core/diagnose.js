@@ -3,7 +3,7 @@
 
 const finite = (x) => Number.isFinite(x);
 
-export function diagnoseCurves(history, { baselineLoss }) {
+function judge(history, baselineLoss) {
   const n = history.length;
   const train = history.map((h) => h.trainLoss);
   const val = history.map((h) => h.valLoss);
@@ -99,4 +99,28 @@ export function diagnoseCurves(history, { baselineLoss }) {
 
 function round(x) {
   return Math.round(x * 1000) / 1000;
+}
+
+/**
+ * opts: { baselineLoss, inProgress?: { done, total } } — while training is still running, a reading of
+ * "too early" or "underfitting" is provisional (it may simply not be finished), so it is reported as
+ * 'inProgress' instead. Divergence and overfitting are real signals even mid-run and are kept.
+ */
+export function diagnoseCurves(history, { baselineLoss, inProgress = null }) {
+  const result = judge(history, baselineLoss);
+  // Mid-run, only call overfitting when validation has stayed up for the last three epochs —
+  // a single noisy spike would otherwise make the verdict flip back and forth while training.
+  const val = history.map((h) => h.valLoss);
+  const best = Math.min(...val);
+  const sustained = val.length >= 3 && val.slice(-3).every((v) => v > 1.1 * best);
+  const spike = result.verdict === 'overfitting' && !sustained;
+  if (inProgress && (spike || result.verdict === 'underfitting' || result.verdict === 'insufficient')) {
+    return {
+      ...result,
+      verdict: 'inProgress',
+      findings: [{ level: 'info', key: 'f.inProgress', vars: { done: inProgress.done, total: inProgress.total } }, ...result.findings.filter((f) => f.level !== 'warn')],
+      advice: [],
+    };
+  }
+  return result;
 }
